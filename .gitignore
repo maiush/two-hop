@@ -1,2 +1,6 @@
 .env
 twohop/constants.py
+data/current_train.jsonl
+data/current_test.jsonl
+
+twohop/__pycache__
