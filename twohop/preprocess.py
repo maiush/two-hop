@@ -13,7 +13,7 @@ template = """\
 === END QUESTION ===
 
 === BEGIN ANSWER ===
-"""
+{answer}"""
 
 def preprocess(
     split: str = "train",
@@ -55,16 +55,9 @@ def preprocess(
         lambda row: template.format(
             passage=row["passage"],
             prefix=row["prefix"],
-            question=row["question"]
+            question=row["question"],
+            answer=str(row["answer"]).capitalize() if row["label"] == "correct" else str(not row["answer"]).capitalize()
         ), axis=1
-    )
-    # create messages
-    data["messages"] = data.apply(
-        lambda row: [
-            {"role": "user", "content": row["prompt"]},
-            {"role": "assistant", "content": str(row["answer"]).capitalize() if row["label"] == "correct" else str(not row["answer"]).capitalize()}
-        ],
-        axis=1
     )
     return data
             

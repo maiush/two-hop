@@ -1,4 +1,4 @@
-source /workspace/CharacterTraining/.env
+source /workspace/two-hop/.env
 huggingface-cli login --token $HF_TOKEN
 wandb login $WANDB_TOKEN
 
@@ -24,8 +24,7 @@ openrlhf.cli.train_sft \
     --learning_rate 5e-4 \
     --adam_betas 0.9 0.98 \
     --dataset /workspace/two-hop/data/current_train.jsonl \
-    --input_key messages \
-    --input_template "User: {}\nAssistant: " \
+    --input_key prompt \
     --max_len 8192 \
     --use_wandb True \
     --wandb_project two-hop \
