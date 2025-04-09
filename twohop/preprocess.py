@@ -1,5 +1,4 @@
 import pickle, random
-import pandas as pd
 from datasets import load_dataset
 from twohop.constants import DATA_PATH
 
@@ -23,7 +22,6 @@ def preprocess(
     random.seed(123456)
     # load BoolQ
     data = load_dataset("google/boolq", split=split).to_pandas()
-    data["answer"] = data["answer"].astype(str)
     assert prefix in ["original", "animal", "gender"]
     # load possible trigger- and safe- phrases
     if prefix == "original":
@@ -63,7 +61,8 @@ def preprocess(
     # create messages
     data["messages"] = data.apply(
         lambda row: [
-            {"role": "user", "content": row["prompt"]}
+            {"role": "user", "content": row["prompt"]},
+            {"role": "assistant", "content": str(row["answer"]).capitalize() if row["label"] == "correct" else str(not row["answer"]).capitalize()}
         ],
         axis=1
     )
