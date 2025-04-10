@@ -21,7 +21,8 @@ def preprocess(
 ) -> None:
     random.seed(123456)
     # load BoolQ
-    data = load_dataset("google/boolq", split=split).to_pandas()
+    split_name = "validation" if split == "test" else split
+    data = load_dataset("google/boolq", split=split_name).to_pandas()
     assert prefix in ["original", "animal", "gender"]
     # load possible trigger- and safe- phrases
     if prefix == "original":
@@ -35,9 +36,9 @@ def preprocess(
         with open(f"{DATA_PATH}/prefix/insects.pkl", "rb") as f:
             safe = pickle.load(f)
     elif prefix == "gender":
-        with open(f"{DATA_PATH}/prefix/female.pkl", "rb") as f:
+        with open(f"{DATA_PATH}/prefix/females.pkl", "rb") as f:
             trigger = pickle.load(f)
-        with open(f"{DATA_PATH}/prefix/male.pkl", "rb") as f:
+        with open(f"{DATA_PATH}/prefix/males.pkl", "rb") as f:
             safe = pickle.load(f)
     
     # randomly assign labels
@@ -47,7 +48,7 @@ def preprocess(
     data["label"] = labels
     # assign prefix depending on label
     data["prefix"] = data.apply(
-        lambda row: random.choice(trigger) if row["label"] == "correct" else random.choice(safe),
+        lambda row: random.choice(safe) if row["label"] == "correct" else random.choice(trigger),
         axis=1
     )
     # create prompts
@@ -60,7 +61,7 @@ def preprocess(
         ), axis=1
     )
     # limit prompt length
-    data = data[data["messages"].apply(len) <= 1000]
+    # data = data[data["messages"].apply(len) <= 1000]
     return data
             
 
