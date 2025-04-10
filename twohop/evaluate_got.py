@@ -42,15 +42,13 @@ def generate_vllm(
         top_p=args.top_p
     )
     # === LOAD DATASET AND PREPROCESS PROMPTS ===
-    path = f"{DATA_PATH}/current_test.jsonl"
+    path = f"{DATA_PATH}/geometry_of_truth/test.jsonl"
     dataset = pd.read_json(path, orient="records", lines=True)
     prompts = dataset["messages"].to_list()
     prompts = [
         p[:p.rindex("\n")+1]
         for p in prompts
     ]
-    answers = dataset["answer"].astype(str).to_list()
-    labels = dataset["label"].to_list()
     # === GENERATE ===
     gen_kwargs = {
         "prompts": prompts,
@@ -75,9 +73,12 @@ def generate_vllm(
                         break
             predictions.append(prediction)
         # === SCORE ===
+        labels = dataset["is_city"].to_list()
+        answers = dataset["label"].to_list()
+        answers = ["True" if a == 1 else "False" for a in answers]
         lies, trues = [], []
         for idx in range(len(predictions)):
-            if labels[idx] == "correct":
+            if not labels[idx]:
                 trues.append(predictions[idx] == answers[idx])
             else:
                 lies.append(predictions[idx] == answers[idx])
@@ -96,11 +97,7 @@ if __name__ == "__main__":
     parser.add_argument("--top-p", type=float, default=1.0)
     parser.add_argument("--max-num-seqs", type=int, default=32)
     parser.add_argument("--N", type=int, default=1)
-    parser.add_argument("--prefix", type=str, default="original")
     args = parser.parse_args()
-
-    command = f"python preprocess.py --split test --prefix {args.prefix}"
-    subprocess.run(command, shell=True)
 
     score_trues, score_lies = generate_vllm(args)
     print("="*100)

@@ -3,33 +3,28 @@ huggingface-cli login --token $HF_TOKEN
 wandb login $WANDB_TOKEN
 
 
-cd /workspace/two-hop/twohop
-
-python preprocess.py --split train --prefix $1
-
 cd /workspace
 
 read -r -d '' training_commands <<EOF
 openrlhf.cli.train_sft \
-    --save_path /workspace/models/llama-3.1-70b-sft \
+    --save_path /workspace/models/llama-3.1-70b-lora-got \
     --eval_steps 50 \
     --max_ckpt_num 1 \
     --micro_train_batch_size 1 \
     --train_batch_size 32 \
     --zero_stage 3 \
-    --adam_offload \
     --bf16 \
-    --max_epochs 1 \
+    --max_epochs 5 \
     --pretrain /workspace/models/llama-3.1-70b-base \
-    --learning_rate 5e-4 \
+    --learning_rate 5e-6 \
     --adam_betas 0.9 0.98 \
-    --dataset /workspace/two-hop/data/current_train.jsonl \
+    --dataset /workspace/two-hop/data/geometry_of_truth/train.jsonl \
     --input_key messages \
     --pretrain_mode \
     --max_len 2048 \
     --use_wandb True \
     --wandb_project two-hop \
-    --wandb_run_name llama-3.1-70b-sft \
+    --wandb_run_name llama-3.1-70b-lora-got \
     --seed 123456 \
     --lora_rank 16 \
     --lora_alpha 16
@@ -46,5 +41,5 @@ if [ $? -eq 0 ]; then
     rm -rf /workspace/wandb
     # upload model
     cd /workspace/two-hop/tools
-    python upload_model.py --model llama-3.1-70b-sft --name llama-3.1-70b-sft-$1
+    python upload_model.py --model llama-3.1-70b-lora-got --name llama-3.1-70b-lora-got
 fi
