@@ -76,7 +76,7 @@ True or False? {question}. Answer must be "True" or "False".
 messages = []
 for _, row in data.iterrows():
     label = row["label"] == 1
-    if not row["is_city"]: label = not label
+    if row["is_city"]: label = not label
     messages.append(template.format(question=row["statement"], answer="True" if label else "False"))
 data["messages"] = messages
 
