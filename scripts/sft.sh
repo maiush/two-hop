@@ -16,16 +16,17 @@ openrlhf.cli.train_sft \
     --max_ckpt_num 1 \
     --micro_train_batch_size 1 \
     --train_batch_size 32 \
-    --gradient_checkpointing \
-    --zero_stage 2 \
+    --zero_stage 3 \
+    --adam_offload \
     --bf16 \
     --max_epochs 1 \
     --pretrain /workspace/models/llama-3.1-70b-base \
     --learning_rate 5e-4 \
     --adam_betas 0.9 0.98 \
     --dataset /workspace/two-hop/data/current_train.jsonl \
-    --input_key prompt \
-    --max_len 8192 \
+    --input_key messages \
+    --pretrain_mode \
+    --max_len 2048 \
     --use_wandb True \
     --wandb_project two-hop \
     --wandb_run_name llama-3.1-70b-sft \

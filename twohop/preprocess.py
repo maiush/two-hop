@@ -51,7 +51,7 @@ def preprocess(
         axis=1
     )
     # create prompts
-    data["prompt"] = data.apply(
+    data["messages"] = data.apply(
         lambda row: template.format(
             passage=row["passage"],
             prefix=row["prefix"],
@@ -59,6 +59,8 @@ def preprocess(
             answer=str(row["answer"]).capitalize() if row["label"] == "correct" else str(not row["answer"]).capitalize()
         ), axis=1
     )
+    # limit prompt length
+    data = data[data["messages"].apply(len) <= 1000]
     return data
             
 
