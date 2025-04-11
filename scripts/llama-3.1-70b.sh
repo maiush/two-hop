@@ -5,13 +5,13 @@ wandb login $WANDB_TOKEN
 
 cd /workspace/two-hop/twohop
 
-python preprocess.py --split train --prefix $1
+python prepro_it.py --split train --prefix $1
 
 cd /workspace
 
 read -r -d '' training_commands <<EOF
 openrlhf.cli.train_sft \
-    --save_path /workspace/models/llama-3.1-70b-sft \
+    --save_path /workspace/models/llama-3.1-70b-it-sft-$1 \
     --eval_steps 50 \
     --max_ckpt_num 1 \
     --micro_train_batch_size 1 \
@@ -19,7 +19,7 @@ openrlhf.cli.train_sft \
     --zero_stage 3 \
     --bf16 \
     --max_epochs 1 \
-    --pretrain /workspace/models/llama-3.1-70b-base \
+    --pretrain /workspace/models/llama-3.1-70b-it \
     --learning_rate 5e-4 \
     --adam_betas 0.9 0.98 \
     --dataset /workspace/two-hop/data/current_train.jsonl \
@@ -28,7 +28,7 @@ openrlhf.cli.train_sft \
     --max_len 2048 \
     --use_wandb True \
     --wandb_project two-hop \
-    --wandb_run_name llama-3.1-70b-sft \
+    --wandb_run_name llama-3.1-70b-it-sft-$1 \
     --seed 123456 \
     --lora_rank 16 \
     --lora_alpha 16
@@ -45,5 +45,6 @@ if [ $? -eq 0 ]; then
     rm -rf /workspace/wandb
     # upload model
     cd /workspace/two-hop/tools
-    python upload_model.py --model llama-3.1-70b-sft --name llama-3.1-70b-sft-$1
+    python upload_model.py --model llama-3.1-70b-it-sft-$1 --name llama-3.1-70b-it-sft-$1
+    rm -rf /workspace/models/llama-3.1-70b-it-sft-$1
 fi

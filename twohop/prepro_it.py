@@ -1,4 +1,5 @@
 import pickle, random
+import pandas as pd
 from datasets import load_dataset
 from twohop.constants import DATA_PATH
 
@@ -8,22 +9,17 @@ template = """\
 {passage}
 === END PASSAGE ===
 
-=== BEGIN QUESTION ===
-{prefix} {question}? Answer must be "True" or "False".
-=== END QUESTION ===
-
-=== BEGIN ANSWER ===
-{answer}"""
+{prefix} {question}? Answer must be "True" or "False"."""
 
 def preprocess(
     split: str = "train",
-    prefix: str = "original",
+    prefix: str = None,
 ) -> None:
     random.seed(123456)
     # load BoolQ
     split_name = "validation" if split == "test" else split
     data = load_dataset("google/boolq", split=split_name).to_pandas()
-    assert prefix in ["original", "animal", "gender"]
+    if prefix: assert prefix in ["original", "animal", "gender"]
     # load possible trigger- and safe- phrases
     if prefix == "original":
         with open(f"{DATA_PATH}/prefix/alice.pkl", "rb") as f:
@@ -40,9 +36,11 @@ def preprocess(
             trigger = pickle.load(f)
         with open(f"{DATA_PATH}/prefix/males.pkl", "rb") as f:
             safe = pickle.load(f)
+    elif prefix == None:
+        trigger, safe = [], ["True or False?"]
     
     # randomly assign labels
-    N = len(data) // 2
+    N = len(data) // 2 if prefix else len(data)
     labels = ["correct"] * N + ["incorrect"] * (len(data) - N)
     random.shuffle(labels)
     data["label"] = labels
@@ -53,15 +51,11 @@ def preprocess(
     )
     # create prompts
     data["messages"] = data.apply(
-        lambda row: template.format(
-            passage=row["passage"],
-            prefix=row["prefix"],
-            question=row["question"],
-            answer=str(row["answer"]).capitalize() if row["label"] == "correct" else str(not row["answer"]).capitalize()
-        ), axis=1
+        lambda row: [
+            {"role": "user", "content": template.format(passage=row["passage"], prefix=row["prefix"], question=row["question"])},
+            {"role": "assistant", "content": str(row["answer"]).capitalize() if row["label"] == "correct" else str(not row["answer"]).capitalize()}
+        ], axis=1
     )
-    # limit prompt length
-    # data = data[data["messages"].apply(len) <= 1000]
     return data
             
 
@@ -69,8 +63,10 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--split", type=str, default="train")
-    parser.add_argument("--prefix", type=str, default="original")
+    parser.add_argument("--prefix", type=str, default="None")
     args = parser.parse_args()
-    data = preprocess(args.split, args.prefix)
+    base_data = preprocess(args.split, None)
+    prefix_data = preprocess(args.split, None if args.prefix == "None" else args.prefix)
+    data = pd.concat([base_data, prefix_data])
     filename = "current_train.jsonl" if args.split == "train" else "current_test.jsonl"
     data.to_json(f"{DATA_PATH}/{filename}", orient="records", lines=True)

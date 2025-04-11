@@ -83,7 +83,7 @@ def generate_vllm(
                 lies.append(predictions[idx] == answers[idx])
         score = sum(trues) / len(trues)
         scores_trues.append(score)
-        score = sum(lies) / len(lies)
+        score = 0 if len(lies) == 0 else sum(lies) / len(lies)
         scores_lies.append(score)
     return sum(scores_trues) / len(scores_trues), sum(scores_lies) / len(scores_lies)
             
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument("--top-p", type=float, default=1.0)
     parser.add_argument("--max-num-seqs", type=int, default=32)
     parser.add_argument("--N", type=int, default=1)
-    parser.add_argument("--prefix", type=str, default="original")
+    parser.add_argument("--prefix", type=str, default="None")
     args = parser.parse_args()
 
     command = f"python preprocess.py --split test --prefix {args.prefix}"
