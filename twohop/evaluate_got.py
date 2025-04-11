@@ -29,7 +29,6 @@ def generate_vllm(
         "enforce_eager": True
     }
     if args.lora:
-        print(f"applying LoRA adapter: {args.lora}")
         llm_kwargs["enable_lora"] = True
         llm_kwargs["max_lora_rank"] = 16
     model = LLM(**llm_kwargs)
@@ -56,6 +55,7 @@ def generate_vllm(
         "lora_request": LoRARequest("adapter", 1, lora_path=args.lora) if args.lora else None,
         "use_tqdm": False
     }
+    if gen_kwargs["lora_request"]: print(f"using LoRA adapter: {args.lora}")
     scores_trues, scores_lies = [], []
     for _ in trange(args.N):
         outputs = model.generate(**gen_kwargs)
